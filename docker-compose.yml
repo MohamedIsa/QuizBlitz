@@ -1,59 +1,49 @@
-version: '3.9'
-
 services:
   api:
     build:
-      context: ./apps/api
-      target: build   # Stops at compile step in dev
+      context: .
+      dockerfile: ./apps/api/Dockerfile
     ports:
-      - '3000:3000'
+      - "3000:3000"
     env_file:
       - .env
-    volumes:
-      - ./apps/api:/app
-      - /app/node_modules   # Avoids overwriting node_modules
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - quizblitz_network
     restart: unless-stopped
-
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+    networks: [quizblitz_network]
   postgres:
     image: postgres:16-alpine
     env_file:
       - .env
     environment:
-      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
-    networks:
-      - quizblitz_network
     restart: unless-stopped
-
+    networks: [quizblitz_network]
   pgadmin:
     image: dpage/pgadmin4
     env_file:
       - .env
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
-      - '5050:80'
+      - "5050:80"
     depends_on:
       - postgres
-    networks:
-      - quizblitz_network
     restart: unless-stopped
+    networks: [quizblitz_network]
 
 volumes:
   postgres_data:

@@ -1,28 +1,23 @@
-# Build stage: install dependencies
 FROM node:20-alpine AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/package.json
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate \
+    && pnpm install --frozen-lockfile
 
-# Build stage: compile the code (e.g., TypeScript)
 FROM node:20-alpine AS build
 WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ENV CI=true
 RUN pnpm run build
 
-# Runtime stage: setup production app
 FROM node:20-alpine AS runtime
 WORKDIR /app
-COPY --from=build /app/dist ./dist
-COPY --from=deps /app/node_modules ./node_modules
-
-# Set NODE_ENV to production
 ENV NODE_ENV=production
-
-# Switch to non-root user
+COPY --from=build /app/apps/api/dist ./dist
+COPY --from=deps /app/node_modules ./node_modules
 USER node
-
 EXPOSE 3000
-
 CMD ["node", "dist/main.js"]
