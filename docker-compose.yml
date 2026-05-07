@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./apps/api/Dockerfile
+      target: development
     ports:
       - "3000:3000"
     env_file:
@@ -12,8 +13,9 @@ services:
         condition: service_healthy
     restart: unless-stopped
     volumes:
-      - ./apps/api:/app
-      - /app/node_modules
+      - .:/app                          # workspace root → hot-reload picks up changes
+      - /app/node_modules               # preserve container's root node_modules
+      - /app/apps/api/node_modules      # preserve container's api node_modules
     networks: [quizblitz_network]
   postgres:
     image: postgres:16-alpine
@@ -28,7 +30,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${DB_USER}"]
+      test: ["CMD", "pg_isready", "-U", "${DB_USER}", "-d", "${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
