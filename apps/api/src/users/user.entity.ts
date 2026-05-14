@@ -17,8 +17,12 @@ export class User {
   @Column({ unique: true, length: 320 })
   email!: string;
 
-  @Column({ name: 'password_hash', length: 60 })
-  passwordHash!: string;
+  @Column({ name: 'password_hash', length: 60, nullable: true })
+  passwordHash!: string | null;
+
+  @Index('idx_users_google_id')
+  @Column({ name: 'google_id', length: 255, nullable: true, unique: true })
+  googleId!: string | null;
 
   @Column({ name: 'display_name', length: 50 })
   displayName!: string;
