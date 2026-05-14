@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -128,6 +128,48 @@ describe('AuthService', () => {
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
+    });
+  });
+
+  describe('refreshTokens', () => {
+    const userWithHash = { ...mockUser, refreshTokenHash: 'stored-hash' };
+
+    it('returns a new token pair when the refresh token matches', async () => {
+      userRepo.findOne.mockResolvedValue(userWithHash);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const result = await service.refreshTokens(mockUser.id, 'raw-refresh-token');
+
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+      expect(userRepo.update).toHaveBeenCalled();
+    });
+
+    it('throws UnauthorizedException when refreshTokenHash is null (logged out)', async () => {
+      userRepo.findOne.mockResolvedValue({ ...mockUser, refreshTokenHash: null });
+
+      await expect(
+        service.refreshTokens(mockUser.id, 'any-token'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('throws UnauthorizedException when the token hash does not match (replayed token)', async () => {
+      userRepo.findOne.mockResolvedValue(userWithHash);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      await expect(
+        service.refreshTokens(mockUser.id, 'stale-token'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('logout', () => {
+    it('clears refreshTokenHash by calling update with null', async () => {
+      await service.logout(mockUser.id);
+
+      expect(userRepo.update).toHaveBeenCalledWith(mockUser.id, {
+        refreshTokenHash: null,
+      });
     });
   });
 });

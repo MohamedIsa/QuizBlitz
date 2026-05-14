@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -54,6 +59,28 @@ export class AuthService {
 
   async login(user: User): Promise<AuthResponseDto> {
     return this.generateTokens(user);
+  }
+
+  async refreshTokens(
+    userId: string,
+    rawRefreshToken: string,
+  ): Promise<AuthResponseDto> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user?.refreshTokenHash) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const isMatch = await bcrypt.compare(rawRefreshToken, user.refreshTokenHash);
+    if (!isMatch) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    return this.generateTokens(user);
+  }
+
+  async logout(userId: string): Promise<void> {
+    await this.userRepo.update(userId, { refreshTokenHash: null });
+    this.logger.log(`User logged out: ${userId}`);
   }
 
   private async generateTokens(user: User): Promise<AuthResponseDto> {
