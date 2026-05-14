@@ -33,6 +33,12 @@ android/
 .env.*.local
 .env.prod
 
+# Terraform
+cloudflare/terraform.tfvars
+cloudflare/.terraform/
+*.tfstate
+*.tfstate.backup
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -49,9 +55,7 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 
-# Lock files (use package-lock.json only)
-yarn.lock
-pnpm-lock.yaml
+
 
 # Project internals (not for public repo)
 .claude/
