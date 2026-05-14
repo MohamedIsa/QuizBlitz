@@ -27,6 +27,9 @@ android/
 !.vscode/settings.json
 .idea/
 
+# RSA key files
+*.pem
+
 # Environment files
 .env
 .env.local

@@ -24,6 +24,18 @@ class EnvironmentVariables {
   @IsInt()
   @IsOptional()
   PORT?: number;
+
+  @IsString()
+  JWT_PRIVATE_KEY!: string;
+
+  @IsString()
+  JWT_PUBLIC_KEY!: string;
+
+  @IsString()
+  JWT_ACCESS_EXPIRY!: string;
+
+  @IsString()
+  JWT_REFRESH_EXPIRY!: string;
 }
 
 export function validateConfig(config: Record<string, unknown>) {

@@ -20,6 +20,12 @@ export class User {
   @Column({ name: 'password_hash', length: 60 })
   passwordHash!: string;
 
+  @Column({ name: 'display_name', length: 50 })
+  displayName!: string;
+
+  @Column({ name: 'refresh_token_hash', length: 60, nullable: true })
+  refreshTokenHash!: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
