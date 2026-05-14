@@ -20,6 +20,10 @@ class EnvironmentVariables {
   @IsString()
   @IsOptional()
   NODE_ENV?: string;
+
+  @IsInt()
+  @IsOptional()
+  PORT?: number;
 }
 
 export function validateConfig(config: Record<string, unknown>) {
