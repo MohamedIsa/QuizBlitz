@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useState } from 'react'
 import { AccessibilityInfo, Platform } from 'react-native'
 import { Snackbar as PaperSnackbar } from 'react-native-paper'
-import { palette } from '@/theme'
+import { tokens } from '@/theme/tokens'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 type SnackbarType = 'success' | 'error' | 'info' | 'warning'
@@ -29,10 +29,10 @@ const SnackbarContext = createContext<SnackbarContextValue | null>(null)
 
 // ─── Background colours per type ──────────────────────────────────────────
 const TYPE_COLORS: Record<SnackbarType, string> = {
-  success: palette.success,
-  error: palette.error,
-  warning: palette.warning,
-  info: palette.primary,
+  success: tokens.color.semantic.correct,
+  error:   tokens.color.semantic.wrong,
+  warning: tokens.color.quadrant.q3,
+  info:    tokens.color.brand.violet,
 }
 
 // ─── Provider ──────────────────────────────────────────────────────────────
