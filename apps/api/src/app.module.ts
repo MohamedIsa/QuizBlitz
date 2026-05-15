@@ -8,6 +8,7 @@ import { validateConfig } from './config/configuration';
 import { HealthModule } from './health/health.module';
 import { QuestionsModule } from './questions/questions.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { QuizzesModule } from './quizzes/quizzes.module';
     HealthModule,
     QuizzesModule,
     QuestionsModule,
+    UploadsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
