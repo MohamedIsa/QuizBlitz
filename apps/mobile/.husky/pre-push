@@ -1,0 +1,17 @@
+echo "Running pre-push checks..."
+
+echo "→ Type checking..."
+npm run type-check
+if [ $? -ne 0 ]; then
+  echo "Type check failed. Push aborted."
+  exit 1
+fi
+
+echo "→ Tests..."
+npm run test
+if [ $? -ne 0 ]; then
+  echo "Tests failed. Push aborted."
+  exit 1
+fi
+
+echo "All checks passed."
