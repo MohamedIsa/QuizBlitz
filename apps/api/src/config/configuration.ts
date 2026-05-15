@@ -50,7 +50,8 @@ class EnvironmentVariables {
   FRONTEND_URL!: string;
 
   @IsString()
-  RESEND_API_KEY!: string;
+  @IsOptional()
+  RESEND_API_KEY?: string;
 
   @IsString()
   FROM_EMAIL!: string;
@@ -69,6 +70,18 @@ class EnvironmentVariables {
 
   @IsString()
   R2_PUBLIC_URL!: string;
+
+  @IsString()
+  @IsOptional()
+  R2_ENDPOINT?: string;
+
+  @IsString()
+  @IsOptional()
+  SMTP_HOST?: string;
+
+  @IsInt()
+  @IsOptional()
+  SMTP_PORT?: number;
 }
 
 export function validateConfig(config: Record<string, unknown>) {

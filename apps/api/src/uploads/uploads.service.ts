@@ -20,9 +20,16 @@ export class UploadsService {
     this.bucket = config.getOrThrow<string>('R2_BUCKET_NAME');
     this.publicUrl = config.getOrThrow<string>('R2_PUBLIC_URL');
 
+    // R2_ENDPOINT overrides the default when set (e.g. MinIO in local dev)
+    const endpoint =
+      config.get<string>('R2_ENDPOINT') ??
+      `https://${accountId}.r2.cloudflarestorage.com`;
+
     this.s3 = new S3Client({
       region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      endpoint,
+      // MinIO uses path-style URLs (host/bucket/key); R2 uses virtual-hosted style
+      forcePathStyle: Boolean(config.get<string>('R2_ENDPOINT')),
       credentials: {
         accessKeyId: config.getOrThrow<string>('R2_ACCESS_KEY_ID'),
         secretAccessKey: config.getOrThrow<string>('R2_SECRET_ACCESS_KEY'),
