@@ -29,7 +29,8 @@ import { LocalStrategy } from './strategies/local.strategy';
           .replace(/\\n/g, '\n'),
         signOptions: {
           algorithm: 'RS256',
-          expiresIn: config.getOrThrow<string>('JWT_ACCESS_EXPIRY'),
+          // cast needed: @nestjs/jwt v11 narrows expiresIn to ms.StringValue, not plain string
+          expiresIn: config.getOrThrow<string>('JWT_ACCESS_EXPIRY') as never,
         },
       }),
     }),

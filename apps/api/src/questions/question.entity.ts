@@ -37,7 +37,7 @@ export class Question {
   @Column({ name: 'order_index', type: 'smallint' })
   orderIndex!: number;
 
-  @Column({ name: 'image_url', length: 500, nullable: true })
+  @Column({ name: 'image_url', type: 'varchar', length: 500, nullable: true })
   imageUrl!: string | null;
 
   @Index('idx_questions_quiz_id')

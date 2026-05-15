@@ -18,6 +18,7 @@ services:
       - .:/app                          # workspace root → hot-reload picks up changes
       - /app/node_modules               # preserve container's root node_modules
       - /app/apps/api/node_modules      # preserve container's api node_modules
+      - /app/apps/api/dist              # isolate dist — container owns it, avoids permission errors
     networks: [quizblitz_network]
 
   postgres:

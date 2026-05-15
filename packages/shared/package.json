@@ -1,0 +1,10 @@
+{
+  "name": "@quizblitz/shared",
+  "version": "0.1.0",
+  "description": "Shared TypeScript types for the QuizBlitz monorepo",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc --noEmit"
+  }
+}

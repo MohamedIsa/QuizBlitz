@@ -17,17 +17,17 @@ export class User {
   @Column({ unique: true, length: 320 })
   email!: string;
 
-  @Column({ name: 'password_hash', length: 60, nullable: true })
+  @Column({ name: 'password_hash', type: 'varchar', length: 60, nullable: true })
   passwordHash!: string | null;
 
   @Index('idx_users_google_id')
-  @Column({ name: 'google_id', length: 255, nullable: true, unique: true })
+  @Column({ name: 'google_id', type: 'varchar', length: 255, nullable: true, unique: true })
   googleId!: string | null;
 
-  @Column({ name: 'display_name', length: 50 })
+  @Column({ name: 'display_name', type: 'varchar', length: 50 })
   displayName!: string;
 
-  @Column({ name: 'refresh_token_hash', length: 60, nullable: true })
+  @Column({ name: 'refresh_token_hash', type: 'varchar', length: 60, nullable: true })
   refreshTokenHash!: string | null;
 
   @CreateDateColumn({ name: 'created_at' })

@@ -1,13 +1,13 @@
 # ── Development ───────────────────────────────────────────────────────────────
 # Used by docker-compose. Mounts source from host; runs nest in watch mode.
-# No dist/ needed — ts-node executes TypeScript directly.
 FROM node:20-alpine AS development
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
+RUN npm install -g pnpm@10.28.2
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
 RUN pnpm install --frozen-lockfile
+RUN mkdir -p /app/apps/api/dist && chown node:node /app/apps/api/dist
 USER node
 EXPOSE 3000
 CMD ["pnpm", "--filter", "api", "run", "start:dev"]
@@ -15,16 +15,16 @@ CMD ["pnpm", "--filter", "api", "run", "start:dev"]
 # ── Production — deps ─────────────────────────────────────────────────────────
 FROM node:20-alpine AS deps
 WORKDIR /app
+RUN npm install -g pnpm@10.28.2
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/shared/package.json ./packages/shared/package.json
-RUN corepack enable && corepack prepare pnpm@10.28.2 --activate \
-    && pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod
 
 # ── Production — build ────────────────────────────────────────────────────────
 FROM node:20-alpine AS build
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
+RUN npm install -g pnpm@10.28.2
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json ./apps/api/package.json
 COPY packages/shared/package.json ./packages/shared/package.json

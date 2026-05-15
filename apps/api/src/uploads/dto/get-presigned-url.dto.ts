@@ -5,9 +5,9 @@ export class GetPresignedUrlDto {
   @ApiProperty({ example: 'cover.jpg' })
   @IsString()
   @IsNotEmpty()
-  filename: string;
+  filename!: string;
 
   @ApiProperty({ enum: ['image/jpeg', 'image/png', 'image/webp'] })
   @IsIn(['image/jpeg', 'image/png', 'image/webp'])
-  contentType: string;
+  contentType!: string;
 }

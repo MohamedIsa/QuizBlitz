@@ -26,7 +26,7 @@ export class Quiz {
   @Column({ type: 'enum', enum: QuizStatus, default: QuizStatus.DRAFT })
   status!: QuizStatus;
 
-  @Column({ name: 'cover_image_url', length: 500, nullable: true })
+  @Column({ name: 'cover_image_url', type: 'varchar', length: 500, nullable: true })
   coverImageUrl!: string | null;
 
   @Index('idx_quizzes_host_id')

@@ -26,7 +26,7 @@ export class PasswordResetToken {
   @Column({ name: 'otp_hash', length: 60 })
   otpHash!: string;
 
-  @Column({ name: 'reset_token', length: 500, nullable: true })
+  @Column({ name: 'reset_token', type: 'varchar', length: 500, nullable: true })
   resetToken!: string | null;
 
   @Column({ name: 'otp_expires_at', type: 'timestamptz' })
