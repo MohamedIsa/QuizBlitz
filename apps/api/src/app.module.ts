@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { validateConfig } from './config/configuration';
 import { HealthModule } from './health/health.module';
+import { QuestionsModule } from './questions/questions.module';
+import { QuizzesModule } from './quizzes/quizzes.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { HealthModule } from './health/health.module';
     }),
     AuthModule,
     HealthModule,
+    QuizzesModule,
+    QuestionsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
