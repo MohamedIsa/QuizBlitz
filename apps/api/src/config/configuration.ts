@@ -82,6 +82,9 @@ class EnvironmentVariables {
   @IsInt()
   @IsOptional()
   SMTP_PORT?: number;
+
+  @IsString()
+  TURNSTILE_SECRET_KEY!: string;
 }
 
 export function validateConfig(config: Record<string, unknown>) {

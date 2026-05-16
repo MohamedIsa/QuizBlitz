@@ -1,44 +1,48 @@
-import { StyleSheet } from 'react-native'
-import { Link } from 'expo-router'
-import { Text } from 'react-native-paper'
+import { useState } from 'react'
+import { View, TouchableOpacity, StyleSheet } from 'react-native'
+import { Link, router } from 'expo-router'
+import * as WebBrowser from 'expo-web-browser'
+import * as Haptics from 'expo-haptics'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
-import { Screen } from '@/components/layout'
-import { Button, Card, Divider, useSnackbar } from '@/components/ui'
+import { AuthShell } from '@/components/auth/AuthShell'
+import { TurnstileWidget } from '@/components/auth/TurnstileWidget'
 import { FormField } from '@/components/forms'
+import { GoogleIcon, QBText, useSnackbar } from '@/components/ui'
 import { useAuthForm } from '@/hooks/useAuthForm'
 import { useBiometricAuth } from '@/hooks/useBiometricAuth'
 import { loginSchema } from '@/validation/auth'
 import type { LoginInput } from '@/validation/auth'
 import { useAuthStore } from '@/store/auth'
-import { apiClient, APIClientError } from '@/core/api-client'
-import { useAppTheme } from '@/theme'
+import { APIClientError } from '@/core/api-client'
+import { authService } from '@/services/authService'
+import { tokens } from '@/theme/tokens'
 
-interface LoginResponse {
-  access_token: string
-  refresh_token: string
-  session_id?: string
-  user: { id: string; email: string; name?: string }
-}
+WebBrowser.maybeCompleteAuthSession()
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL_LOCAL ?? process.env.EXPO_PUBLIC_API_URL ?? ''
 
 export default function LoginScreen() {
   const login = useAuthStore((s) => s.login)
   const biometricLogin = useAuthStore((s) => s.biometricLogin)
   const { show } = useSnackbar()
-  const { colors } = useAppTheme()
   const { isEnabled, canUseBiometrics, biometricType, authenticate } = useBiometricAuth()
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [rememberMe, setRememberMe] = useState(true)
 
   const { control, errors, handleSubmit, isLoading } = useAuthForm<LoginInput>({
     schema: loginSchema,
+    defaultValues: { email: '', password: '' },
     onSubmit: async (data) => {
-      const res = await apiClient.post<LoginResponse>('/auth/login', data)
+      if (!turnstileToken) {
+        show('Verifying, please wait…', { type: 'info' })
+        return
+      }
+      const res = await authService.login(data.email, data.password, turnstileToken)
       await login(
-        {
-          accessToken: res.access_token,
-          refreshToken: res.refresh_token,
-          sessionId: res.session_id,
-        },
-        res.user,
+        { accessToken: res.accessToken, refreshToken: res.refreshToken },
+        { id: res.user.id, email: res.user.email, name: res.user.displayName },
       )
+      router.replace('/(tabs)')
     },
     onError: (err) => {
       const message =
@@ -46,6 +50,33 @@ export default function LoginScreen() {
       show(message, { type: 'error' })
     },
   })
+
+  const handleGoogleSignIn = async () => {
+    const result = await WebBrowser.openAuthSessionAsync(
+      `${API_URL}/auth/google`,
+      'quizblitz://auth/callback',
+    )
+    if (result.type !== 'success') return
+    try {
+      const url = new URL(result.url)
+      const accessToken = url.searchParams.get('accessToken') ?? ''
+      const refreshToken = url.searchParams.get('refreshToken') ?? ''
+      if (!accessToken) {
+        show('Google sign-in failed. Please try again.', { type: 'error' })
+        return
+      }
+      const user = await authService.getMe(accessToken)
+      await login({ accessToken, refreshToken }, { id: user.id, email: user.email, name: user.displayName })
+      router.replace('/(tabs)')
+    } catch {
+      show('Google sign-in failed. Please try again.', { type: 'error' })
+    }
+  }
+
+  const handlePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    handleSubmit()
+  }
 
   const handleBiometricLogin = async () => {
     const { success, cancelled } = await authenticate('Sign in to your account')
@@ -56,7 +87,6 @@ export default function LoginScreen() {
     }
     try {
       await biometricLogin()
-      // isAuthenticated is now true — route guard handles navigation to /(tabs)
     } catch (err) {
       const message =
         err instanceof APIClientError ? err.message : 'Unable to sign in. Please use your password.'
@@ -65,26 +95,23 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen centered>
-      <Text variant="headlineMedium" style={[styles.title, { color: colors.onBackground }]}>
-        Welcome back
-      </Text>
-      <Text variant="bodyMedium" style={[styles.subtitle, { color: colors.onSurfaceVariant }]}>
-        Sign in to your account
-      </Text>
+    <AuthShell
+      title="Welcome back"
+      sub="Sign in to keep your scores and streaks."
+    >
+      <TurnstileWidget onVerify={setTurnstileToken} />
 
-      <Card>
+      <View style={styles.fields}>
         <FormField<LoginInput>
           name="email"
           control={control}
-          label="Email address"
+          label="Email"
           error={errors.email}
           keyboardType="email-address"
           placeholder="you@example.com"
           autoComplete="email"
           returnKeyType="next"
         />
-
         <FormField<LoginInput>
           name="password"
           control={control}
@@ -96,84 +123,168 @@ export default function LoginScreen() {
           returnKeyType="done"
           onSubmitEditing={handleSubmit}
         />
+      </View>
 
-        <Link href="/(auth)/forgot-password" style={styles.forgotLink}>
-          <Text variant="labelMedium" style={{ color: colors.primary }}>
-            Forgot password?
-          </Text>
-        </Link>
+      <View style={styles.metaRow}>
+        <TouchableOpacity
+          style={styles.rememberRow}
+          onPress={() => setRememberMe((v) => !v)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+            {rememberMe && (
+              <MaterialCommunityIcons name="check" size={11} color="#fff" />
+            )}
+          </View>
+          <QBText variant="bodySm" color="soft">Remember me</QBText>
+        </TouchableOpacity>
 
-        <Button fullWidth loading={isLoading} onPress={handleSubmit}>
-          Sign In
-        </Button>
+        <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} activeOpacity={0.7}>
+          <QBText variant="labelSemibold" color="violet">Forgot password?</QBText>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.spacer} />
+
+      <View style={styles.actions}>
+        <TouchableOpacity
+          style={[styles.primaryBtn, isLoading && styles.primaryBtnDisabled]}
+          onPress={handlePress}
+          activeOpacity={0.85}
+          disabled={isLoading}
+        >
+          <QBText variant="labelBold" color="onDark">
+            {isLoading ? 'Signing in…' : 'Sign in'}
+          </QBText>
+        </TouchableOpacity>
 
         {isEnabled && canUseBiometrics && (
-          <>
-            <Divider spacing={4} />
-            <Button
-              fullWidth
-              mode="outlined"
-              onPress={handleBiometricLogin}
-              icon={({ size, color }) => (
-                <MaterialCommunityIcons
-                  name={biometricType === 'facial' ? 'face-recognition' : 'fingerprint'}
-                  size={size}
-                  color={color}
-                />
-              )}
-            >
+          <TouchableOpacity style={styles.secondaryBtn} onPress={handleBiometricLogin} activeOpacity={0.8}>
+            <MaterialCommunityIcons
+              name={biometricType === 'facial' ? 'face-recognition' : 'fingerprint'}
+              size={18}
+              color={tokens.color.brand.violet}
+            />
+            <QBText variant="labelSemibold" color="violet" style={styles.secondaryBtnText}>
               {biometricType === 'facial' ? 'Sign in with Face ID' : 'Sign in with Fingerprint'}
-            </Button>
-          </>
+            </QBText>
+          </TouchableOpacity>
         )}
-      </Card>
 
-      <Link href="/(auth)/register" style={styles.footer}>
-        <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant }}>
-          Don&apos;t have an account?{' '}
-          <Text variant="bodyMedium" style={{ color: colors.primary, fontWeight: '600' }}>
-            Create one
-          </Text>
-        </Text>
-      </Link>
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <QBText variant="caption" color="muted" style={styles.dividerText}>or</QBText>
+          <View style={styles.dividerLine} />
+        </View>
 
-      {__DEV__ && (
-        <Button
-          mode="text"
-          onPress={() =>
-            login(
-              { accessToken: 'dev-token', refreshToken: 'dev-refresh' },
-              { id: 'dev-1', email: 'dev@example.com', name: 'Dev User' },
-            )
-          }
-          style={styles.devBypass}
-          textColor={colors.onSurfaceVariant}
-        >
-          [DEV] Skip login
-        </Button>
-      )}
-    </Screen>
+        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn} activeOpacity={0.8}>
+          <GoogleIcon size={20} />
+          <QBText variant="labelSemibold" style={styles.googleBtnText}>Continue with Google</QBText>
+        </TouchableOpacity>
+
+        <Link href="/(auth)/register" asChild>
+          <TouchableOpacity activeOpacity={0.7}>
+            <QBText variant="bodySm" color="muted" style={styles.footer}>
+              {'New here? '}
+              <QBText variant="labelSemibold" color="violet">Create an account</QBText>
+            </QBText>
+          </TouchableOpacity>
+        </Link>
+      </View>
+    </AuthShell>
   )
 }
 
 const styles = StyleSheet.create({
-  title: {
-    textAlign: 'center',
-    fontWeight: '700',
+  fields: {
+    gap: 14,
   },
-  subtitle: {
-    textAlign: 'center',
-    marginBottom: 8,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 14,
   },
-  forgotLink: {
-    alignSelf: 'flex-end',
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkbox: {
+    width: 16,
+    height: 16,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: tokens.color.ink.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: tokens.color.brand.violet,
+    borderColor: tokens.color.brand.violet,
+  },
+  spacer: {
+    flex: 1,
+    minHeight: 28,
+  },
+  actions: {
+    gap: 12,
+  },
+  primaryBtn: {
+    height: 52,
+    borderRadius: tokens.radius.md,
+    backgroundColor: tokens.color.brand.violet,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryBtnDisabled: {
+    opacity: 0.6,
+  },
+  secondaryBtn: {
+    height: 52,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1.5,
+    borderColor: tokens.color.ink.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  secondaryBtnText: {
+    fontSize: 15,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginVertical: 4,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: tokens.color.ink.border,
+  },
+  dividerText: {
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  googleBtn: {
+    height: 52,
+    borderRadius: tokens.radius.md,
+    borderWidth: 1.5,
+    borderColor: tokens.color.ink.border,
+    backgroundColor: tokens.color.ink.surface,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  googleBtnText: {
+    fontSize: 15,
+    color: tokens.color.ink.ink,
   },
   footer: {
-    alignSelf: 'center',
-    marginTop: 8,
-  },
-  devBypass: {
-    marginTop: 16,
-    opacity: 0.5,
+    textAlign: 'center',
+    marginTop: 4,
   },
 })

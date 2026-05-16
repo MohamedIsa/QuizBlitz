@@ -10,4 +10,9 @@ export class LoginDto {
   @IsString()
   @IsNotEmpty()
   password!: string;
+
+  @ApiProperty({ description: 'Cloudflare Turnstile token' })
+  @IsString()
+  @IsNotEmpty()
+  turnstileToken!: string;
 }

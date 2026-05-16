@@ -280,7 +280,15 @@ instance.interceptors.request.use(
 
 // ─── Response interceptor ─────────────────────────────────────────────────
 instance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Unwrap the server's { success: true, data: T } envelope transparently.
+    // All callers receive T directly — no envelope handling needed at the call site.
+    const d = response.data as { success?: boolean; data?: unknown } | null
+    if (d && typeof d === 'object' && d.success === true && 'data' in d) {
+      response.data = d.data
+    }
+    return response
+  },
   async (error: AxiosError) => {
     const original = error.config
 
@@ -323,18 +331,20 @@ async function doTokenRefresh(): Promise<string> {
   const refreshToken = await SecureStore.getItemAsync(TOKEN_KEYS.REFRESH)
   if (!refreshToken) throw new APIClientError('No refresh token stored', 401, null)
 
-  const { data } = await instance.post<{ access_token: string; refresh_token?: string }>(
-    '/auth/refresh',
-    { refresh_token: refreshToken },
-    { skipAuth: true },
-  )
+  const data = await instance
+    .post<{ accessToken: string; refreshToken?: string }>(
+      '/auth/refresh',
+      { refreshToken },
+      { skipAuth: true },
+    )
+    .then((r) => r.data)
 
-  await SecureStore.setItemAsync(TOKEN_KEYS.ACCESS, data.access_token)
-  if (data.refresh_token) {
-    await SecureStore.setItemAsync(TOKEN_KEYS.REFRESH, data.refresh_token)
+  await SecureStore.setItemAsync(TOKEN_KEYS.ACCESS, data.accessToken)
+  if (data.refreshToken) {
+    await SecureStore.setItemAsync(TOKEN_KEYS.REFRESH, data.refreshToken)
   }
 
-  return data.access_token
+  return data.accessToken
 }
 
 export async function refreshSession(): Promise<string> {

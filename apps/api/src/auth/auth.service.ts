@@ -213,6 +213,10 @@ export class AuthService {
     const refreshTokenHash = await bcrypt.hash(refreshToken, BCRYPT_ROUNDS_REFRESH);
     await this.userRepo.update(user.id, { refreshTokenHash });
 
-    return { accessToken, refreshToken };
+    return {
+      accessToken,
+      refreshToken,
+      user: { id: user.id, email: user.email, displayName: user.displayName },
+    };
   }
 }

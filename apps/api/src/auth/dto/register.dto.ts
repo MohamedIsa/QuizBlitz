@@ -23,4 +23,9 @@ export class RegisterDto {
   @IsNotEmpty()
   @MaxLength(50)
   displayName!: string;
+
+  @ApiProperty({ description: 'Cloudflare Turnstile token' })
+  @IsString()
+  @IsNotEmpty()
+  turnstileToken!: string;
 }

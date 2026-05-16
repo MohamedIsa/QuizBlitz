@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { View } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import { TextInput as PaperTextInput, HelperText } from 'react-native-paper'
 import type { TextInputProps as PaperTextInputProps } from 'react-native-paper'
 import type { StyleProp, ViewStyle } from 'react-native'
+import { tokens } from '@/theme/tokens'
 
 export interface TextInputProps extends Omit<PaperTextInputProps, 'theme'> {
   /** Shown in red below the field and sets the error state */
@@ -33,6 +34,8 @@ export function TextInput({
         mode={mode}
         error={hasError}
         secureTextEntry={hidden}
+        outlineStyle={styles.outline}
+        contentStyle={styles.content}
         right={
           secureTextEntry ? (
             <PaperTextInput.Icon
@@ -56,3 +59,12 @@ export function TextInput({
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  outline: {
+    borderRadius: tokens.radius.md,
+  },
+  content: {
+    fontFamily: tokens.font.ui,
+  },
+})

@@ -42,8 +42,27 @@ export const forgotPasswordSchema = z.object({
   email: emailField,
 })
 
+export const otpSchema = z.object({
+  code: z
+    .string()
+    .length(6, 'Code must be 6 digits')
+    .regex(/^\d{6}$/, 'Code must be 6 digits'),
+})
+
+export const resetPasswordSchema = z
+  .object({
+    password: strongPasswordField,
+    confirmPassword: z.string().min(1, 'Please confirm your password'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+
 // ─── Inferred types ────────────────────────────────────────────────────────
 
 export type LoginInput = z.infer<typeof loginSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+export type OtpInput = z.infer<typeof otpSchema>
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>

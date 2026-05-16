@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
 import type { Control, DefaultValues, FieldErrors, FieldValues, Resolver } from 'react-hook-form'
 
 // Accept whatever zodResolver accepts as its first argument so we stay
@@ -20,39 +20,29 @@ export function useAuthForm<T extends FieldValues>({
   onError,
   defaultValues,
 }: UseAuthFormOptions<T>) {
-  const [isLoading, setIsLoading] = useState(false)
-
   const {
     control,
     handleSubmit: rhfHandleSubmit,
     reset,
     formState: { errors },
   } = useForm<T>({
-    // Cast to Resolver<T> so useForm<T> is fully typed; the resolver itself
-    // still validates against the schema at runtime.
     resolver: zodResolver(schema) as unknown as Resolver<T>,
     defaultValues,
     mode: 'onTouched',
   })
 
-  const handleSubmit = rhfHandleSubmit(async (data: T) => {
-    setIsLoading(true)
-    try {
-      await onSubmit(data)
-    } catch (err) {
-      onError?.(err)
-    } finally {
-      setIsLoading(false)
-    }
+  const mutation = useMutation({
+    mutationFn: onSubmit,
+    onError: (err) => onError?.(err),
   })
 
+  const handleSubmit = rhfHandleSubmit((data: T) => mutation.mutate(data))
+
   return {
-    // Cast strips the free TTransformedValues param that leaks when the
-    // resolver type is erased above, keeping call-sites simply typed.
     control: control as unknown as Control<T>,
     errors: errors as FieldErrors<T>,
     reset,
-    isLoading,
+    isLoading: mutation.isPending,
     handleSubmit,
   }
 }

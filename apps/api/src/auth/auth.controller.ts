@@ -1,9 +1,10 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { User } from '../users/user.entity';
 import { AuthService } from './auth.service';
+import { TurnstileService } from './turnstile.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
@@ -23,6 +24,7 @@ import { UserPayload } from './interfaces/user-payload.interface';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
+    private readonly turnstileService: TurnstileService,
     private readonly config: ConfigService,
   ) {}
 
@@ -30,7 +32,8 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new host account' })
   @ApiBody({ type: RegisterDto })
-  register(@Body() dto: RegisterDto) {
+  async register(@Body() dto: RegisterDto, @Ip() ip: string) {
+    await this.turnstileService.verify(dto.turnstileToken, ip);
     return this.authService.register(dto);
   }
 
@@ -39,7 +42,8 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'Log in and receive JWT tokens' })
   @ApiBody({ type: LoginDto })
-  login(@CurrentUser() user: User) {
+  async login(@CurrentUser() user: User, @Body() dto: LoginDto, @Ip() ip: string) {
+    await this.turnstileService.verify(dto.turnstileToken, ip);
     return this.authService.login(user);
   }
 

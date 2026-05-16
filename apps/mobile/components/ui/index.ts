@@ -29,3 +29,7 @@ export type { SnackbarOptions } from './Snackbar'
 
 export { OfflineBanner } from './OfflineBanner'
 export { UpdateBanner } from './UpdateBanner'
+export { GoogleIcon } from './GoogleIcon'
+
+export { QBText } from './QBText'
+export type { QBTextProps, QBTextVariant, QBTextColor } from './QBText'

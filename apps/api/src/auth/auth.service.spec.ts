@@ -94,6 +94,7 @@ describe('AuthService', () => {
       email: 'host@example.com',
       password: 'password123',
       displayName: 'Host User',
+      turnstileToken: 'test-token',
     };
 
     it('creates a user and returns tokens', async () => {
