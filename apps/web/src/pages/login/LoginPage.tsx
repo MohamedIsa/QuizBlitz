@@ -28,7 +28,7 @@ interface LoginResponse {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -184,6 +184,7 @@ export function LoginPage() {
             <Turnstile
               ref={turnstileRef}
               siteKey={TURNSTILE_SITE_KEY}
+              options={{ theme: 'light', size: 'flexible' }}
               onSuccess={(token) => setTurnstileToken(token)}
               onExpire={() => setTurnstileToken(null)}
               onError={() => setTurnstileToken(null)}
