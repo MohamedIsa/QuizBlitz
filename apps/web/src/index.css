@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Fonts ───────────────────────────────────────── */
+  --font-sans:    "Inter", sans-serif;
+  --font-display: "Bricolage Grotesque", sans-serif;
+  --font-ui:      "Inter", sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  /* ── Brand colours ───────────────────────────────── */
+  --color-violet:      #6E3FF3;
+  --color-violet-deep: #4F1FBF;
+  --color-violet-soft: #EEE7FF;
+  --color-violet-tint: #F7F4FF;
+  --color-yellow:      #FFD24A;
+  --color-yellow-deep: #E6B400;
+
+  /* ── Stage colours ───────────────────────────────── */
+  --color-stage-night:      #0B0820;
+  --color-stage-night-lift: #1A1438;
+  --color-stage-night-line: #2A2148;
+
+  /* ── Ink scale ───────────────────────────────────── */
+  --color-ink:         #0F0A1F;
+  --color-ink-soft:    #3F3559;
+  --color-ink-muted:   #6B6481;
+  --color-ink-border:  #E7E2F0;
+  --color-border-soft: #F1ECF7;
+  --color-surface:     #FFFFFF;
+  --color-surface-2:   #FAF8FE;
+  --color-surface-3:   #F3EEFB;
+
+  /* ── Semantic colours ────────────────────────────── */
+  --color-correct:      #16A34A;
+  --color-correct-soft: #DCFCE7;
+  --color-wrong:        #EF4444;
+  --color-wrong-soft:   #FEE2E2;
+
+  /* ── Quadrant answer colours ─────────────────────── */
+  --color-q1: #FF4D6D;
+  --color-q2: #2563EB;
+  --color-q3: #FFB400;
+  --color-q4: #16A34A;
+
+  /* ── Border radii ────────────────────────────────── */
+  --radius-xs:   6px;
+  --radius-sm:  10px;
+  --radius-md:  14px;
+  --radius-lg:  20px;
+  --radius-xl:  28px;
+  --radius-pill: 9999px;
+
+  /* ── Shadows ─────────────────────────────────────── */
+  --shadow-card: 0 1px 2px rgba(15, 10, 31, 0.04), 0 4px 16px rgba(15, 10, 31, 0.05);
+  --shadow-lift: 0 4px 12px rgba(15, 10, 31, 0.06), 0 16px 40px rgba(15, 10, 31, 0.08);
+  --shadow-pop:  0 12px 40px rgba(110, 63, 243, 0.28);
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    min-height: 100svh;
+  }
+}
