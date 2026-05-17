@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AuthGuard } from '@/router/AuthGuard'
 import { LoginPage } from '@/pages/login/LoginPage'
+import { AuthCallbackPage } from '@/pages/auth-callback/AuthCallbackPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 
 const Placeholder = ({ name }: { name: string }) => (
@@ -12,6 +13,7 @@ const Placeholder = ({ name }: { name: string }) => (
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  { path: '/auth/callback', element: <AuthCallbackPage /> },
   ...(import.meta.env.DEV
     ? [{
         path: '/__brand-test',

@@ -210,6 +210,7 @@ export function LoginPage() {
         {/* Google */}
         <button
           type="button"
+          onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL}/auth/google` }}
           className="flex w-full items-center justify-center gap-2.5 rounded-[10px] border border-ink-border bg-surface py-3 text-[15px] font-semibold text-ink transition-colors hover:bg-surface-2"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
