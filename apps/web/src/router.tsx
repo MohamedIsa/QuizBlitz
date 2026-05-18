@@ -1,8 +1,10 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AuthGuard } from '@/router/AuthGuard'
+import { HostLayout } from '@/components/layout/HostLayout'
 import { LoginPage } from '@/pages/login/LoginPage'
 import { AuthCallbackPage } from '@/pages/auth-callback/AuthCallbackPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
+import { QuizLibraryPage } from '@/pages/quizzes/QuizLibraryPage'
 
 const Placeholder = ({ name }: { name: string }) => (
   <div className="p-8">
@@ -27,10 +29,15 @@ export const router = createBrowserRouter([
     element: <AuthGuard />,
     children: [
       { path: '/', element: <Navigate to="/dashboard" replace /> },
-      { path: '/dashboard', element: <DashboardPage /> },
-      { path: '/quizzes', element: <Placeholder name="Quiz Library" /> },
-      { path: '/quizzes/new', element: <Placeholder name="New Quiz" /> },
-      { path: '/quizzes/:id/edit', element: <Placeholder name="Edit Quiz" /> },
+      {
+        element: <HostLayout />,
+        children: [
+          { path: '/dashboard', element: <DashboardPage /> },
+          { path: '/quizzes', element: <QuizLibraryPage /> },
+          { path: '/quizzes/new', element: <Placeholder name="New Quiz" /> },
+          { path: '/quizzes/:id/edit', element: <Placeholder name="Edit Quiz" /> },
+        ],
+      },
     ],
   },
 ])
