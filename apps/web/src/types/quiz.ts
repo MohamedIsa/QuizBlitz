@@ -14,6 +14,7 @@ export interface Quiz {
 export interface CreateQuizDto {
   title: string
   description?: string
+  status?: QuizStatus
 }
 
 export interface UpdateQuizDto {

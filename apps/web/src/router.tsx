@@ -5,13 +5,7 @@ import { LoginPage } from '@/pages/login/LoginPage'
 import { AuthCallbackPage } from '@/pages/auth-callback/AuthCallbackPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { QuizLibraryPage } from '@/pages/quizzes/QuizLibraryPage'
-
-const Placeholder = ({ name }: { name: string }) => (
-  <div className="p-8">
-    <h1 className="font-display text-2xl font-bold text-ink">{name}</h1>
-    <p className="mt-2 text-ink-muted">Coming soon.</p>
-  </div>
-)
+import { QuizEditorPage } from '@/pages/quizzes/QuizEditorPage'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -34,8 +28,8 @@ export const router = createBrowserRouter([
         children: [
           { path: '/dashboard', element: <DashboardPage /> },
           { path: '/quizzes', element: <QuizLibraryPage /> },
-          { path: '/quizzes/new', element: <Placeholder name="New Quiz" /> },
-          { path: '/quizzes/:id/edit', element: <Placeholder name="Edit Quiz" /> },
+          { path: '/quizzes/new', element: <QuizEditorPage /> },
+          { path: '/quizzes/:id/edit', element: <QuizEditorPage /> },
         ],
       },
     ],
