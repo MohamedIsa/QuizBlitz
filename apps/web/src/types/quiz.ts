@@ -21,4 +21,5 @@ export interface UpdateQuizDto {
   title?: string
   description?: string
   status?: QuizStatus
+  coverImageUrl?: string | null
 }

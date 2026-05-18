@@ -3,6 +3,7 @@ import type { Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { quizSchema, type QuizFormInput } from '@/schemas/quiz.schemas'
 import type { Quiz, QuizStatus } from '@/types/quiz'
+import { CoverImageUploader } from './CoverImageUploader'
 
 interface QuizEditorFormProps {
   quiz?: Quiz
@@ -26,10 +27,12 @@ export function QuizEditorForm({ quiz, isSubmitting, submitError, onSubmit, onDe
       title: quiz?.title ?? '',
       description: quiz?.description ?? '',
       status: quiz?.status ?? 'draft',
+      coverImageUrl: quiz?.coverImageUrl ?? null,
     },
   })
 
   const status = form.watch('status')
+  const coverImageUrl = form.watch('coverImageUrl') ?? null
 
   return (
     <form
@@ -70,6 +73,17 @@ export function QuizEditorForm({ quiz, isSubmitting, submitError, onSubmit, onDe
         {form.formState.errors.description && (
           <p className="mt-1 text-xs text-wrong">{form.formState.errors.description.message}</p>
         )}
+      </div>
+
+      {/* Cover image */}
+      <div>
+        <span className="mb-1.5 block text-xs font-semibold text-ink-soft">
+          Cover image <span className="font-normal text-ink-muted">(optional)</span>
+        </span>
+        <CoverImageUploader
+          imageUrl={coverImageUrl}
+          onChange={url => form.setValue('coverImageUrl', url, { shouldDirty: true })}
+        />
       </div>
 
       {/* Status */}

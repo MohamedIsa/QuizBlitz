@@ -11,6 +11,7 @@ export const quizSchema = z.object({
     .max(500, 'Description must be 500 characters or less')
     .optional(),
   status: z.enum(['draft', 'published']),
+  coverImageUrl: z.string().nullable().optional(),
 })
 
 export type QuizFormInput = z.infer<typeof quizSchema>

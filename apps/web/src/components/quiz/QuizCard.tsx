@@ -32,9 +32,17 @@ export function QuizCard({ quiz }: QuizCardProps) {
 
       {/* Icon + badge */}
       <div className="relative flex items-start justify-between">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl font-display text-lg font-bold ${accent.iconBg} ${accent.iconText}`}>
-          {quiz.title.charAt(0).toUpperCase()}
-        </div>
+        {quiz.coverImageUrl ? (
+          <img
+            src={quiz.coverImageUrl}
+            alt=""
+            className="h-11 w-11 rounded-xl border border-ink-border object-cover"
+          />
+        ) : (
+          <div className={`flex h-11 w-11 items-center justify-center rounded-xl text-xl ${accent.iconBg}`}>
+            📋
+          </div>
+        )}
         <QuizStatusBadge status={quiz.status} />
       </div>
 
