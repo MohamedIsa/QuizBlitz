@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Ip,
+  Post,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
@@ -33,7 +43,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Register a new host account' })
   @ApiBody({ type: RegisterDto })
   async register(@Body() dto: RegisterDto, @Ip() ip: string) {
-    await this.turnstileService.verify(dto.turnstileToken, ip);
+    if (dto.turnstileToken) await this.turnstileService.verify(dto.turnstileToken, ip);
     return this.authService.register(dto);
   }
 
@@ -42,15 +52,21 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'Log in and receive JWT tokens' })
   @ApiBody({ type: LoginDto })
-  async login(@CurrentUser() user: User, @Body() dto: LoginDto, @Ip() ip: string) {
-    await this.turnstileService.verify(dto.turnstileToken, ip);
+  async login(
+    @CurrentUser() user: User,
+    @Body() dto: LoginDto,
+    @Ip() ip: string,
+  ) {
+    if (dto.turnstileToken) await this.turnstileService.verify(dto.turnstileToken, ip);
     return this.authService.login(user);
   }
 
   @Public()
   @UseGuards(JwtRefreshGuard)
   @Post('refresh')
-  @ApiOperation({ summary: 'Rotate refresh token and receive a new token pair' })
+  @ApiOperation({
+    summary: 'Rotate refresh token and receive a new token pair',
+  })
   @ApiBody({ type: RefreshDto })
   refresh(@Body() _dto: RefreshDto, @CurrentUser() user: RefreshUserPayload) {
     return this.authService.refreshTokens(user.id, user.refreshToken);
@@ -67,7 +83,9 @@ export class AuthController {
   @Public()
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Request a password reset OTP (always returns 200)' })
+  @ApiOperation({
+    summary: 'Request a password reset OTP (always returns 200)',
+  })
   @ApiBody({ type: ForgotPasswordDto })
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
@@ -102,7 +120,9 @@ export class AuthController {
   @Public()
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
-  @ApiOperation({ summary: 'Google OAuth 2.0 callback — issues JWT token pair' })
+  @ApiOperation({
+    summary: 'Google OAuth 2.0 callback — issues JWT token pair',
+  })
   async googleCallback(@CurrentUser() user: User, @Res() res: Response) {
     const tokens = await this.authService.login(user);
     const frontendUrl = this.config.getOrThrow<string>('FRONTEND_URL');

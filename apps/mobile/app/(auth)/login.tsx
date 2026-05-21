@@ -5,7 +5,6 @@ import * as WebBrowser from 'expo-web-browser'
 import * as Haptics from 'expo-haptics'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { AuthShell } from '@/components/auth/AuthShell'
-import { TurnstileWidget } from '@/components/auth/TurnstileWidget'
 import { FormField } from '@/components/forms'
 import { GoogleIcon, QBText, useSnackbar } from '@/components/ui'
 import { useAuthForm } from '@/hooks/useAuthForm'
@@ -26,18 +25,13 @@ export default function LoginScreen() {
   const biometricLogin = useAuthStore((s) => s.biometricLogin)
   const { show } = useSnackbar()
   const { isEnabled, canUseBiometrics, biometricType, authenticate } = useBiometricAuth()
-  const [turnstileToken, setTurnstileToken] = useState('')
   const [rememberMe, setRememberMe] = useState(true)
 
   const { control, errors, handleSubmit, isLoading } = useAuthForm<LoginInput>({
     schema: loginSchema,
     defaultValues: { email: '', password: '' },
     onSubmit: async (data) => {
-      if (!turnstileToken) {
-        show('Verifying, please wait…', { type: 'info' })
-        return
-      }
-      const res = await authService.login(data.email, data.password, turnstileToken)
+      const res = await authService.login(data.email, data.password)
       await login(
         { accessToken: res.accessToken, refreshToken: res.refreshToken },
         { id: res.user.id, email: res.user.email, name: res.user.displayName },
@@ -94,13 +88,60 @@ export default function LoginScreen() {
     }
   }
 
+  const actions = (
+    <>
+      <TouchableOpacity
+        style={[styles.primaryBtn, isLoading && styles.primaryBtnDisabled]}
+        onPress={handlePress}
+        activeOpacity={0.85}
+        disabled={isLoading}
+      >
+        <QBText variant="labelBold" color="onDark">
+          {isLoading ? 'Signing in…' : 'Sign in'}
+        </QBText>
+      </TouchableOpacity>
+
+      {isEnabled && canUseBiometrics && (
+        <TouchableOpacity style={styles.secondaryBtn} onPress={handleBiometricLogin} activeOpacity={0.8}>
+          <MaterialCommunityIcons
+            name={biometricType === 'facial' ? 'face-recognition' : 'fingerprint'}
+            size={18}
+            color={tokens.color.brand.violet}
+          />
+          <QBText variant="labelSemibold" color="violet" style={styles.secondaryBtnText}>
+            {biometricType === 'facial' ? 'Sign in with Face ID' : 'Sign in with Fingerprint'}
+          </QBText>
+        </TouchableOpacity>
+      )}
+
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <QBText variant="caption" color="muted" style={styles.dividerText}>or</QBText>
+        <View style={styles.dividerLine} />
+      </View>
+
+      <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn} activeOpacity={0.8}>
+        <GoogleIcon size={20} />
+        <QBText variant="labelSemibold" style={styles.googleBtnText}>Continue with Google</QBText>
+      </TouchableOpacity>
+
+      <View style={styles.footerRow}>
+        <QBText variant="bodySm" color="muted">New here?{' '}</QBText>
+        <Link href="/(auth)/register" asChild>
+          <TouchableOpacity activeOpacity={0.7}>
+            <QBText variant="labelSemibold" color="violet">Create an account</QBText>
+          </TouchableOpacity>
+        </Link>
+      </View>
+    </>
+  )
+
   return (
     <AuthShell
       title="Welcome back"
       sub="Sign in to keep your scores and streaks."
+      footer={actions}
     >
-      <TurnstileWidget onVerify={setTurnstileToken} />
-
       <View style={styles.fields}>
         <FormField<LoginInput>
           name="email"
@@ -143,54 +184,6 @@ export default function LoginScreen() {
           <QBText variant="labelSemibold" color="violet">Forgot password?</QBText>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.spacer} />
-
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[styles.primaryBtn, isLoading && styles.primaryBtnDisabled]}
-          onPress={handlePress}
-          activeOpacity={0.85}
-          disabled={isLoading}
-        >
-          <QBText variant="labelBold" color="onDark">
-            {isLoading ? 'Signing in…' : 'Sign in'}
-          </QBText>
-        </TouchableOpacity>
-
-        {isEnabled && canUseBiometrics && (
-          <TouchableOpacity style={styles.secondaryBtn} onPress={handleBiometricLogin} activeOpacity={0.8}>
-            <MaterialCommunityIcons
-              name={biometricType === 'facial' ? 'face-recognition' : 'fingerprint'}
-              size={18}
-              color={tokens.color.brand.violet}
-            />
-            <QBText variant="labelSemibold" color="violet" style={styles.secondaryBtnText}>
-              {biometricType === 'facial' ? 'Sign in with Face ID' : 'Sign in with Fingerprint'}
-            </QBText>
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <QBText variant="caption" color="muted" style={styles.dividerText}>or</QBText>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn} activeOpacity={0.8}>
-          <GoogleIcon size={20} />
-          <QBText variant="labelSemibold" style={styles.googleBtnText}>Continue with Google</QBText>
-        </TouchableOpacity>
-
-        <Link href="/(auth)/register" asChild>
-          <TouchableOpacity activeOpacity={0.7}>
-            <QBText variant="bodySm" color="muted" style={styles.footer}>
-              {'New here? '}
-              <QBText variant="labelSemibold" color="violet">Create an account</QBText>
-            </QBText>
-          </TouchableOpacity>
-        </Link>
-      </View>
     </AuthShell>
   )
 }
@@ -222,13 +215,6 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: tokens.color.brand.violet,
     borderColor: tokens.color.brand.violet,
-  },
-  spacer: {
-    flex: 1,
-    minHeight: 28,
-  },
-  actions: {
-    gap: 12,
   },
   primaryBtn: {
     height: 52,
@@ -283,8 +269,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: tokens.color.ink.ink,
   },
-  footer: {
-    textAlign: 'center',
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 4,
   },
 })

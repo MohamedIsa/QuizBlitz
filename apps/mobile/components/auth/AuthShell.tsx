@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { View, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native'
+import { View, TouchableOpacity, Pressable, Keyboard, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
@@ -8,20 +8,17 @@ import { tokens } from '@/theme/tokens'
 
 interface AuthShellProps {
   children: ReactNode
+  footer?: ReactNode
   back?: boolean
   title?: string
   sub?: ReactNode
 }
 
-export function AuthShell({ children, back = true, title, sub }: AuthShellProps) {
+export function AuthShell({ children, footer, back = true, title, sub }: AuthShellProps) {
   const insets = useSafeAreaInsets()
 
   return (
-    <KeyboardAvoidingView
-      style={styles.kav}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-    <View style={[styles.root, { paddingTop: insets.top }]}>
+    <Pressable style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom + 16 }]} onPress={Keyboard.dismiss}>
       {back ? (
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
@@ -39,23 +36,20 @@ export function AuthShell({ children, back = true, title, sub }: AuthShellProps)
         </View>
       ) : null}
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
+      <View style={styles.content}>
         {children}
-      </ScrollView>
-    </View>
-    </KeyboardAvoidingView>
+      </View>
+
+      {footer ? (
+        <View style={styles.footer}>
+          {footer}
+        </View>
+      ) : null}
+    </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  kav: {
-    flex: 1,
-  },
   root: {
     flex: 1,
     backgroundColor: tokens.color.ink.surface,
@@ -81,11 +75,14 @@ const styles = StyleSheet.create({
   sub: {
     marginTop: 8,
   },
-  scroll: {
+  content: {
     flex: 1,
+    paddingHorizontal: 28,
+    paddingTop: 28,
   },
-  scrollContent: {
-    padding: 28,
-    flexGrow: 1,
+  footer: {
+    paddingHorizontal: 28,
+    paddingTop: 16,
+    gap: 12,
   },
 })

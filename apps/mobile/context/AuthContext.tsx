@@ -1,5 +1,5 @@
-import { useAuthStore } from '@/store/auth'
 import { useEffect } from 'react'
+import { useAuthStore } from '@/store/auth'
 
 export type { User } from '@/store/auth'
 

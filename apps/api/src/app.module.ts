@@ -14,19 +14,20 @@ import { UploadsModule } from './uploads/uploads.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateConfig }),
     TypeOrmModule.forRootAsync({
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.getOrThrow<string>('DB_HOST'),
-        port: config.getOrThrow<number>('DB_PORT'),
-        username: config.getOrThrow<string>('DB_USER'),
-        password: config.getOrThrow<string>('DB_PASSWORD'),
-        database: config.getOrThrow<string>('DB_NAME'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: [__dirname + '/migrations/*{.ts,.js}'],
-        synchronize: false,
-        migrationsRun: true,
-        logging: config.get<string>('NODE_ENV') === 'development',
-      }),
+      useFactory: (config: ConfigService) => {
+        const databaseUrl = config.getOrThrow<string>('DATABASE_URL');
+        const requireSsl = databaseUrl.includes('sslmode=require');
+        return {
+          type: 'postgres' as const,
+          url: databaseUrl,
+          ssl: requireSsl ? { rejectUnauthorized: false } : false,
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          migrations: [__dirname + '/migrations/*{.ts,.js}'],
+          synchronize: false,
+          migrationsRun: true,
+          logging: config.get<string>('NODE_ENV') === 'development',
+        };
+      },
       inject: [ConfigService],
     }),
     AuthModule,

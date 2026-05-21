@@ -3,19 +3,29 @@ import { IsInt, IsOptional, IsString, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
   @IsString()
-  DB_HOST!: string;
+  DATABASE_URL!: string;
+
+  // Individual DB_* vars are retained for the Postgres container init
+  // (docker-compose), but the app itself connects via DATABASE_URL.
+  @IsString()
+  @IsOptional()
+  DB_HOST?: string;
 
   @IsInt()
-  DB_PORT!: number;
+  @IsOptional()
+  DB_PORT?: number;
 
   @IsString()
-  DB_USER!: string;
+  @IsOptional()
+  DB_USER?: string;
 
   @IsString()
-  DB_PASSWORD!: string;
+  @IsOptional()
+  DB_PASSWORD?: string;
 
   @IsString()
-  DB_NAME!: string;
+  @IsOptional()
+  DB_NAME?: string;
 
   @IsString()
   @IsOptional()

@@ -6,7 +6,6 @@ import * as WebBrowser from 'expo-web-browser'
 import * as Haptics from 'expo-haptics'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { AuthShell } from '@/components/auth/AuthShell'
-import { TurnstileWidget } from '@/components/auth/TurnstileWidget'
 import { FormField } from '@/components/forms'
 import { GoogleIcon, QBText, useSnackbar } from '@/components/ui'
 import { useAuthForm } from '@/hooks/useAuthForm'
@@ -27,10 +26,10 @@ const STRENGTH_CHECKS = [
 ]
 
 function getStrength(score: number) {
-  if (score <= 1) return { label: 'Weak',   color: tokens.color.semantic.wrong }
-  if (score === 2) return { label: 'Fair',   color: tokens.color.brand.yellow }
-  if (score === 3) return { label: 'Good',   color: tokens.color.semantic.correct }
-  return              { label: 'Strong', color: tokens.color.semantic.correct }
+  if (score <= 1) return { label: 'Weak', color: tokens.color.semantic.wrong }
+  if (score === 2) return { label: 'Fair', color: tokens.color.brand.yellow }
+  if (score === 3) return { label: 'Good', color: tokens.color.semantic.correct }
+  return { label: 'Strong', color: tokens.color.semantic.correct }
 }
 
 interface RegisterResponse {
@@ -44,7 +43,6 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL_LOCAL ?? process.env.EXPO_PUBLIC
 export default function RegisterScreen() {
   const login = useAuthStore((s) => s.login)
   const { show } = useSnackbar()
-  const [turnstileToken, setTurnstileToken] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
 
   const { control, errors, handleSubmit, isLoading } = useAuthForm<RegisterInput>({
@@ -55,15 +53,10 @@ export default function RegisterScreen() {
         show('Please accept the Terms and Privacy Policy.', { type: 'info' })
         return
       }
-      if (!turnstileToken) {
-        show('Verifying, please wait…', { type: 'info' })
-        return
-      }
       const res = await authService.register({
         displayName: data.name,
         email: data.email,
         password: data.password,
-        turnstileToken,
       })
       await login(
         { accessToken: res.accessToken, refreshToken: res.refreshToken },
@@ -103,20 +96,57 @@ export default function RegisterScreen() {
         return
       }
       const user = await authService.getMe(accessToken)
-      await login({ accessToken, refreshToken }, { id: user.id, email: user.email, name: user.displayName })
+      await login(
+        { accessToken, refreshToken },
+        { id: user.id, email: user.email, name: user.displayName },
+      )
       router.replace('/(tabs)')
     } catch {
       show('Google sign-in failed. Please try again.', { type: 'error' })
     }
   }
 
+  const actions = (
+    <>
+      <TouchableOpacity
+        style={[styles.primaryBtn, isLoading && styles.primaryBtnDisabled]}
+        onPress={handlePress}
+        activeOpacity={0.85}
+        disabled={isLoading}
+      >
+        <QBText variant="labelBold" color="onDark">
+          {isLoading ? 'Creating account…' : 'Create account'}
+        </QBText>
+      </TouchableOpacity>
+
+      <View style={styles.dividerRow}>
+        <View style={styles.dividerLine} />
+        <QBText variant="caption" color="muted" style={styles.dividerText}>or</QBText>
+        <View style={styles.dividerLine} />
+      </View>
+
+      <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn} activeOpacity={0.8}>
+        <GoogleIcon size={20} />
+        <QBText variant="labelSemibold" style={styles.googleBtnText}>Continue with Google</QBText>
+      </TouchableOpacity>
+
+      <View style={styles.footerRow}>
+        <QBText variant="bodySm" color="muted">Already have an account?{' '}</QBText>
+        <Link href="/(auth)/login" asChild>
+          <TouchableOpacity activeOpacity={0.7}>
+            <QBText variant="labelSemibold" color="violet">Sign in</QBText>
+          </TouchableOpacity>
+        </Link>
+      </View>
+    </>
+  )
+
   return (
     <AuthShell
       title="Create your account"
       sub="Save your scores, climb leaderboards, and rejoin sessions across devices."
+      footer={actions}
     >
-      <TurnstileWidget onVerify={setTurnstileToken} />
-
       <View style={styles.fields}>
         <FormField<RegisterInput>
           name="name"
@@ -156,11 +186,17 @@ export default function RegisterScreen() {
                 {[0, 1, 2, 3].map((i) => (
                   <View
                     key={i}
-                    style={[styles.bar, { backgroundColor: i < score ? strength.color : tokens.color.ink.surface3 }]}
+                    style={[
+                      styles.bar,
+                      { backgroundColor: i < score ? strength.color : tokens.color.ink.surface3 },
+                    ]}
                   />
                 ))}
               </View>
-              <QBText variant="caption" style={{ color: strength.color, fontFamily: tokens.font.uiSemibold }}>
+              <QBText
+                variant="caption"
+                style={{ color: strength.color, fontFamily: tokens.font.uiSemibold }}
+              >
                 {strength.label}
               </QBText>
             </View>
@@ -180,69 +216,27 @@ export default function RegisterScreen() {
         />
       </View>
 
-      <TouchableOpacity
-        style={styles.termsRow}
-        onPress={() => setTermsAccepted((v) => !v)}
-        activeOpacity={0.7}
-      >
-        <View style={[styles.termsCheckbox, termsAccepted && styles.termsCheckboxChecked]}>
-          {termsAccepted && (
-            <MaterialCommunityIcons name="check" size={12} color="#fff" />
-          )}
-        </View>
-        <QBText variant="bodyXs" color="soft" style={styles.termsText}>
-          {'I agree to the '}
-          <QBText variant="labelSemibold" color="violet" style={styles.termsLinkSize}>Terms</QBText>
-          {' and '}
-          <QBText variant="labelSemibold" color="violet" style={styles.termsLinkSize}>Privacy Policy</QBText>
-          {'.'}
-        </QBText>
-      </TouchableOpacity>
-
-      {turnstileToken ? (
-        <View style={styles.turnstileBadge}>
-          <View style={styles.turnstileCheck}>
-            <MaterialCommunityIcons name="check" size={11} color={tokens.color.brand.violet} />
-          </View>
-          <QBText variant="bodyXs" color="muted" style={styles.turnstileVerified}>Verified</QBText>
-          <QBText variant="caption" color="muted" style={styles.turnstileLabel}>Turnstile</QBText>
-        </View>
-      ) : null}
-
-      <View style={styles.spacer} />
-
-      <View style={styles.actions}>
+      <View style={styles.termsRow}>
         <TouchableOpacity
-          style={[styles.primaryBtn, isLoading && styles.primaryBtnDisabled]}
-          onPress={handlePress}
-          activeOpacity={0.85}
-          disabled={isLoading}
+          onPress={() => setTermsAccepted((v) => !v)}
+          activeOpacity={0.7}
         >
-          <QBText variant="labelBold" color="onDark">
-            {isLoading ? 'Creating account…' : 'Create account'}
-          </QBText>
+          <View style={[styles.termsCheckbox, termsAccepted && styles.termsCheckboxChecked]}>
+            {termsAccepted && <MaterialCommunityIcons name="check" size={12} color="#fff" />}
+          </View>
         </TouchableOpacity>
-
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <QBText variant="caption" color="muted" style={styles.dividerText}>or</QBText>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleSignIn} activeOpacity={0.8}>
-          <GoogleIcon size={20} />
-          <QBText variant="labelSemibold" style={styles.googleBtnText}>Continue with Google</QBText>
-        </TouchableOpacity>
-
-        <Link href="/(auth)/login" asChild>
+        <View style={styles.termsTextRow}>
+          <QBText variant="bodyXs" color="soft">I agree to the </QBText>
           <TouchableOpacity activeOpacity={0.7}>
-            <QBText variant="bodySm" color="muted" style={styles.footer}>
-              {'Already have an account? '}
-              <QBText variant="labelSemibold" color="violet">Sign in</QBText>
-            </QBText>
+            <QBText variant="labelSemibold" color="violet" style={styles.termsLinkSize}>Terms</QBText>
           </TouchableOpacity>
-        </Link>
+          <QBText variant="bodyXs" color="soft"> and </QBText>
+          <TouchableOpacity activeOpacity={0.7}>
+            <QBText variant="labelSemibold" color="violet" style={styles.termsLinkSize}>Privacy Policy</QBText>
+          </TouchableOpacity>
+        </View>
       </View>
+
     </AuthShell>
   )
 }
@@ -288,46 +282,14 @@ const styles = StyleSheet.create({
     backgroundColor: tokens.color.brand.violet,
     borderColor: tokens.color.brand.violet,
   },
-  termsText: {
-    lineHeight: 19,
+  termsTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
     flex: 1,
   },
   termsLinkSize: {
     fontSize: 12,
-  },
-  turnstileBadge: {
-    marginTop: 18,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: tokens.color.ink.border,
-    borderRadius: tokens.radius.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: tokens.color.ink.surface2,
-  },
-  turnstileCheck: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: tokens.color.brand.violet,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  turnstileVerified: {
-    flex: 1,
-  },
-  turnstileLabel: {
-    letterSpacing: 0.5,
-  },
-  spacer: {
-    flex: 1,
-    minHeight: 28,
-  },
-  actions: {
-    gap: 14,
   },
   primaryBtn: {
     height: 52,
@@ -368,8 +330,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: tokens.color.ink.ink,
   },
-  footer: {
-    textAlign: 'center',
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 4,
   },
 })

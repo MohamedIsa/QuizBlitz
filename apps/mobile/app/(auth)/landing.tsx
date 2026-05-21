@@ -36,7 +36,7 @@ export default function LandingScreen() {
           activeOpacity={0.85}
         >
           <MaterialCommunityIcons name="lightning-bolt" size={18} color={tokens.color.ink.ink} />
-          <QBText variant="labelBold" style={styles.joinBtnText}>Join a Quiz</QBText>
+          <QBText variant="labelBold" style={styles.joinBtnText}>Create Account</QBText>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -44,7 +44,7 @@ export default function LandingScreen() {
           onPress={() => router.push('/(auth)/login')}
           activeOpacity={0.8}
         >
-          <QBText variant="labelSemibold" style={styles.hostBtnText}>Sign in to host</QBText>
+          <QBText variant="labelSemibold" style={styles.hostBtnText}>Sign In</QBText>
         </TouchableOpacity>
       </View>
     </View>

@@ -17,15 +17,14 @@ export interface AuthResponse {
 // ─── Auth service ─────────────────────────────────────────────────────────
 
 export const authService = {
-  login(email: string, password: string, turnstileToken: string): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>('/auth/login', { email, password, turnstileToken })
+  login(email: string, password: string): Promise<AuthResponse> {
+    return apiClient.post<AuthResponse>('/auth/login', { email, password })
   },
 
   register(params: {
     displayName: string
     email: string
     password: string
-    turnstileToken: string
   }): Promise<AuthResponse> {
     return apiClient.post<AuthResponse>('/auth/register', params)
   },

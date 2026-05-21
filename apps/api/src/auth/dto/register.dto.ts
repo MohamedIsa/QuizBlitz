@@ -1,7 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -24,8 +25,8 @@ export class RegisterDto {
   @MaxLength(50)
   displayName!: string;
 
-  @ApiProperty({ description: 'Cloudflare Turnstile token' })
+  @ApiPropertyOptional({ description: 'Cloudflare Turnstile token (web only)' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  turnstileToken!: string;
+  turnstileToken?: string;
 }
