@@ -7,7 +7,7 @@ export function OfflineBanner() {
 
   return (
     <Banner
-      visible={!isConnected}
+      visible={isConnected === false}
       icon="wifi-off"
       style={styles.banner}
     >

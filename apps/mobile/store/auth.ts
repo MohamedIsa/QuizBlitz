@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store'
 import { router } from 'expo-router'
 import { clearTokens, refreshSession, setTokens } from '@/core/api-client'
 import { deregisterPushTokenWithServer } from '@/lib/notifications'
+import { authService } from '@/services/authService'
 
 export interface User {
   id: string
@@ -62,9 +63,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
   },
 
   logout: async () => {
-    // Best-effort deregister — must run BEFORE clearTokens so the auth header
-    // is still attached. Failures are swallowed inside the helper.
-    await deregisterPushTokenWithServer()
+    // Both calls are best-effort and run before clearTokens so the auth header
+    // is still attached. allSettled keeps local logout clean if the server
+    // rejects (e.g. already-expired token or network issue).
+    await Promise.allSettled([authService.logout(), deregisterPushTokenWithServer()])
     await Promise.all([clearTokens(), SecureStore.deleteItemAsync(USER_KEY)])
     set({ isLoading: false, isAuthenticated: false, user: null })
     router.replace('/(auth)/login')

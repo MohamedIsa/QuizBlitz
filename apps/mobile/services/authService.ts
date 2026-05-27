@@ -45,6 +45,10 @@ export const authService = {
     return apiClient.post('/auth/reset-password', { resetToken, newPassword }, { skipAuth: true })
   },
 
+  logout(): Promise<void> {
+    return apiClient.post('/auth/logout')
+  },
+
   getMe(accessToken: string): Promise<AuthUser> {
     return apiClient.get<AuthUser>(
       '/auth/me',

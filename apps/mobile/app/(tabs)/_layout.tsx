@@ -48,6 +48,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="quizzes"
+        options={{
+          title: 'Quizzes',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="clipboard-text-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',

@@ -22,6 +22,7 @@ import { Stack } from 'expo-router'
 import { PaperProvider } from 'react-native-paper'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { darkTheme, lightTheme, THEME_CONFIG } from '@/theme'
 import { SnackbarProvider, OfflineBanner, UpdateBanner } from '@/components/ui'
 import { AuthProvider } from '@/context/AuthContext'
@@ -98,12 +99,14 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <ErrorBoundary>
-          <ThemedApp />
-        </ErrorBoundary>
-      </SafeAreaProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <SafeAreaProvider>
+          <ErrorBoundary>
+            <ThemedApp />
+          </ErrorBoundary>
+        </SafeAreaProvider>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   )
 }

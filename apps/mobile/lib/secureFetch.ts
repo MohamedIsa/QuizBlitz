@@ -14,7 +14,7 @@ export const API_URL = (
 // True only when the resolved API URL uses HTTPS — pinning is meaningless (and
 // impossible to set up) on plain HTTP, so the entire pinning path is skipped for
 // local / dev servers that run without a certificate.
-export const isHttps = API_URL.startsWith('https://')
+const isHttps = API_URL.startsWith('https://')
 
 // ─── SPKI public key hashes ────────────────────────────────────────────────
 // Store in .env:  EXPO_PUBLIC_SPKI_HASH_1=sha256/AAAA...

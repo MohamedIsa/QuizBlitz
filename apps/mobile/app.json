@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.quizblitz.mobile"
+      "bundleIdentifier": "app.quizblitz.mobile",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "QuizBlitz needs access to your photo library to add images to your quizzes."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +24,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT"
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.READ_MEDIA_IMAGES"
       ],
       "package": "app.quizblitz.mobile"
     },
@@ -55,7 +59,13 @@
       "expo-local-authentication",
       "expo-updates",
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "QuizBlitz needs access to your photo library to add images to your quizzes."
+        }
+      ]
     ],
     "runtimeVersion": {
       "policy": "appVersion"

@@ -2,16 +2,15 @@ import { useEffect, useState } from 'react'
 import NetInfo, { type NetInfoState } from '@react-native-community/netinfo'
 
 export interface NetworkState {
-  isConnected: boolean
+  isConnected: boolean | null
   isInternetReachable: boolean | null
   type: string
 }
 
-// Pessimistic default — assume offline until NetInfo reports otherwise. Prevents
-// the user from tapping network-bound actions in the brief window between mount
-// and the first NetInfo event when the device has no connectivity.
+// null = not yet determined (NetInfo hasn't reported). Distinguishing unknown
+// from offline prevents the banner from flashing on every cold start.
 const INITIAL_STATE: NetworkState = {
-  isConnected: false,
+  isConnected: null,
   isInternetReachable: null,
   type: 'unknown',
 }
