@@ -1,0 +1,16 @@
+# Dependencies and build output are recreated in Docker build stages.
+node_modules
+**/node_modules
+dist
+**/dist
+
+# Local configuration and source-control metadata must never enter the build context.
+.env
+.env.*
+!.env.example
+.git
+
+# Tooling artifacts and local-only files.
+.DS_Store
+coverage
+*.log
