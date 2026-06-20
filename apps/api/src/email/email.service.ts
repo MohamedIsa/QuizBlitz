@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { Resend } from 'resend';
@@ -27,7 +27,10 @@ export class EmailService {
   }
 
   async sendOtp(to: string, otp: string): Promise<void> {
-    const from = this.config.getOrThrow<string>('FROM_EMAIL');
+    const from = this.config.get<string>('FROM_EMAIL');
+    if (!from) {
+      throw new ServiceUnavailableException('Email delivery is not configured');
+    }
     const subject = 'Your QuizBlitz password reset code';
     const html = `<p>Your code is: <strong>${otp}</strong></p><p>Expires in 15 minutes.</p>`;
 
@@ -44,7 +47,7 @@ export class EmailService {
     }
 
     if (!this.resend) {
-      throw new Error('No email transport configured: set SMTP_HOST or RESEND_API_KEY');
+      throw new ServiceUnavailableException('Email delivery is not configured');
     }
 
     const { error } = await this.resend.emails.send({ from, to, subject, html });

@@ -41,7 +41,7 @@ describe('GoogleStrategy', () => {
         GoogleStrategy,
         {
           provide: ConfigService,
-          useValue: { getOrThrow: jest.fn().mockReturnValue('mock-value') },
+          useValue: { get: jest.fn().mockReturnValue('mock-value') },
         },
         { provide: AuthService, useValue: authService },
       ],

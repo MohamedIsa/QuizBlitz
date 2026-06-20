@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -11,30 +11,37 @@ const PRESIGNED_URL_TTL_SECONDS = 300; // 5 minutes — sufficient for any mobil
 @Injectable()
 export class UploadsService {
   private readonly logger = new Logger(UploadsService.name);
-  private readonly s3: S3Client;
-  private readonly bucket: string;
-  private readonly publicUrl: string;
 
-  constructor(private readonly config: ConfigService) {
-    const accountId = config.getOrThrow<string>('R2_ACCOUNT_ID');
-    this.bucket = config.getOrThrow<string>('R2_BUCKET_NAME');
-    this.publicUrl = config.getOrThrow<string>('R2_PUBLIC_URL');
+  constructor(private readonly config: ConfigService) {}
+
+  private getStorageConfiguration() {
+    const accountId = this.config.get<string>('R2_ACCOUNT_ID');
+    const bucket = this.config.get<string>('R2_BUCKET_NAME');
+    const publicUrl = this.config.get<string>('R2_PUBLIC_URL');
+    const accessKeyId = this.config.get<string>('R2_ACCESS_KEY_ID');
+    const secretAccessKey = this.config.get<string>('R2_SECRET_ACCESS_KEY');
+
+    if (!accountId || !bucket || !publicUrl || !accessKeyId || !secretAccessKey) {
+      throw new ServiceUnavailableException('R2 uploads are not configured');
+    }
 
     // R2_ENDPOINT overrides the default when set (e.g. MinIO in local dev)
     const endpoint =
-      config.get<string>('R2_ENDPOINT') ??
+      this.config.get<string>('R2_ENDPOINT') ??
       `https://${accountId}.r2.cloudflarestorage.com`;
 
-    this.s3 = new S3Client({
+    const s3 = new S3Client({
       region: 'auto',
       endpoint,
       // MinIO uses path-style URLs (host/bucket/key); R2 uses virtual-hosted style
-      forcePathStyle: Boolean(config.get<string>('R2_ENDPOINT')),
+      forcePathStyle: Boolean(this.config.get<string>('R2_ENDPOINT')),
       credentials: {
-        accessKeyId: config.getOrThrow<string>('R2_ACCESS_KEY_ID'),
-        secretAccessKey: config.getOrThrow<string>('R2_SECRET_ACCESS_KEY'),
+        accessKeyId,
+        secretAccessKey,
       },
     });
+
+    return { bucket, publicUrl, s3 };
   }
 
   /**
@@ -48,16 +55,19 @@ export class UploadsService {
    * @returns uploadUrl (PUT here), publicUrl (read from here after upload), key
    */
   async getPresignedUrl(userId: string, dto: GetPresignedUrlDto): Promise<PresignedUrlResponseDto> {
-    const ext = dto.filename.split('.').pop()?.toLowerCase() ?? 'bin';
+    const { bucket, publicUrl, s3 } = this.getStorageConfiguration();
+    const ext = dto.filename.includes('.')
+      ? dto.filename.split('.').pop()?.toLowerCase() || 'bin'
+      : 'bin';
     const key = `uploads/${userId}/${randomUUID()}.${ext}`;
 
     const command = new PutObjectCommand({
-      Bucket: this.bucket,
+      Bucket: bucket,
       Key: key,
       ContentType: dto.contentType,
     });
 
-    const uploadUrl = await getSignedUrl(this.s3, command, {
+    const uploadUrl = await getSignedUrl(s3, command, {
       expiresIn: PRESIGNED_URL_TTL_SECONDS,
     });
 
@@ -65,7 +75,7 @@ export class UploadsService {
 
     return {
       uploadUrl,
-      publicUrl: `${this.publicUrl}/${key}`,
+      publicUrl: `${publicUrl}/${key}`,
       key,
     };
   }

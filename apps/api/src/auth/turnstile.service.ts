@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -6,8 +6,13 @@ export class TurnstileService {
   constructor(private readonly config: ConfigService) {}
 
   async verify(token: string, ip?: string): Promise<void> {
+    const secret = this.config.get<string>('TURNSTILE_SECRET_KEY');
+    if (!secret) {
+      throw new ServiceUnavailableException('Turnstile is not configured');
+    }
+
     const body: Record<string, string> = {
-      secret: this.config.getOrThrow<string>('TURNSTILE_SECRET_KEY'),
+      secret,
       response: token,
     };
     if (ip) body.remoteip = ip;

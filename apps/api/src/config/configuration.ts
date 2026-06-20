@@ -49,38 +49,48 @@ class EnvironmentVariables {
   JWT_REFRESH_EXPIRY!: string;
 
   @IsString()
-  GOOGLE_CLIENT_ID!: string;
+  @IsOptional()
+  GOOGLE_CLIENT_ID?: string;
 
   @IsString()
-  GOOGLE_CLIENT_SECRET!: string;
+  @IsOptional()
+  GOOGLE_CLIENT_SECRET?: string;
 
   @IsString()
-  GOOGLE_CALLBACK_URL!: string;
+  @IsOptional()
+  GOOGLE_CALLBACK_URL?: string;
 
   @IsString()
-  FRONTEND_URL!: string;
+  @IsOptional()
+  FRONTEND_URL?: string;
 
   @IsString()
   @IsOptional()
   RESEND_API_KEY?: string;
 
   @IsString()
-  FROM_EMAIL!: string;
+  @IsOptional()
+  FROM_EMAIL?: string;
 
   @IsString()
-  R2_ACCOUNT_ID!: string;
+  @IsOptional()
+  R2_ACCOUNT_ID?: string;
 
   @IsString()
-  R2_ACCESS_KEY_ID!: string;
+  @IsOptional()
+  R2_ACCESS_KEY_ID?: string;
 
   @IsString()
-  R2_SECRET_ACCESS_KEY!: string;
+  @IsOptional()
+  R2_SECRET_ACCESS_KEY?: string;
 
   @IsString()
-  R2_BUCKET_NAME!: string;
+  @IsOptional()
+  R2_BUCKET_NAME?: string;
 
   @IsString()
-  R2_PUBLIC_URL!: string;
+  @IsOptional()
+  R2_PUBLIC_URL?: string;
 
   @IsString()
   @IsOptional()
@@ -95,7 +105,8 @@ class EnvironmentVariables {
   SMTP_PORT?: number;
 
   @IsString()
-  TURNSTILE_SECRET_KEY!: string;
+  @IsOptional()
+  TURNSTILE_SECRET_KEY?: string;
 }
 
 export function validateConfig(config: Record<string, unknown>) {

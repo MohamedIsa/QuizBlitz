@@ -1,4 +1,5 @@
 import { ConfigService } from '@nestjs/config';
+import { ServiceUnavailableException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
@@ -61,7 +62,7 @@ describe('UploadsService', () => {
         {
           provide: ConfigService,
           useValue: {
-            getOrThrow: jest.fn((key: string) => CONFIG_VALUES[key]),
+            get: jest.fn((key: string) => CONFIG_VALUES[key]),
           },
         },
       ],
@@ -126,6 +127,23 @@ describe('UploadsService', () => {
       });
 
       expect(result.key).toMatch(/\.bin$/);
+    });
+
+    it('throws a service-unavailable error when R2 is not configured', async () => {
+      const module = await Test.createTestingModule({
+        providers: [
+          UploadsService,
+          { provide: ConfigService, useValue: { get: jest.fn() } },
+        ],
+      }).compile();
+      const unconfiguredService = module.get(UploadsService);
+
+      await expect(
+        unconfiguredService.getPresignedUrl(TEST_USER_ID, {
+          filename: 'cover.jpg',
+          contentType: 'image/jpeg',
+        }),
+      ).rejects.toThrow(new ServiceUnavailableException('R2 uploads are not configured'));
     });
   });
 });

@@ -12,9 +12,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     private readonly authService: AuthService,
   ) {
     super({
-      clientID: config.getOrThrow<string>('GOOGLE_CLIENT_ID'),
-      clientSecret: config.getOrThrow<string>('GOOGLE_CLIENT_SECRET'),
-      callbackURL: config.getOrThrow<string>('GOOGLE_CALLBACK_URL'),
+      // The guard rejects OAuth requests when Google is not configured. Passport
+      // still requires these values while Nest builds its provider graph.
+      clientID: config.get<string>('GOOGLE_CLIENT_ID') || 'disabled',
+      clientSecret: config.get<string>('GOOGLE_CLIENT_SECRET') || 'disabled',
+      callbackURL: config.get<string>('GOOGLE_CALLBACK_URL') || 'http://localhost/disabled',
       scope: ['email', 'profile'],
     });
   }
