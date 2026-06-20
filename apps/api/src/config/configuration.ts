@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { IsInt, IsOptional, IsString, validateSync } from 'class-validator';
+import { resolveDatabaseUrl } from './database-url';
 
 class EnvironmentVariables {
   @IsString()
@@ -98,15 +99,23 @@ class EnvironmentVariables {
 }
 
 export function validateConfig(config: Record<string, unknown>) {
-  const validated = plainToInstance(EnvironmentVariables, config, {
-    enableImplicitConversion: true,
-  });
+  const configWithDatabaseUrl = {
+    ...config,
+    DATABASE_URL: resolveDatabaseUrl(config),
+  };
+  const validated = plainToInstance(
+    EnvironmentVariables,
+    configWithDatabaseUrl,
+    {
+      enableImplicitConversion: true,
+    },
+  );
   const errors = validateSync(validated, { skipMissingProperties: false });
 
   if (errors.length > 0) {
     throw new Error(
       errors
-        .map(e => Object.values(e.constraints ?? {}).join(', '))
+        .map((e) => Object.values(e.constraints ?? {}).join(', '))
         .join('; '),
     );
   }
